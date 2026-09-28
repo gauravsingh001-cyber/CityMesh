@@ -77,15 +77,8 @@ You should see:
 CityMesh server running at http://localhost:3000
 ```
 
-### Step 4 — Open the app in your browser
-- **User view:** http://localhost:3000/index.html
-- **Shopkeeper view:** http://localhost:3000/shopkeeper.html
-
-👉 **Best way to demo it:** open both links in **two separate browser tabs/windows**
-side by side. Act as the "user" in one tab and the "shopkeeper" in the other, so your
-mentor can see the real-time ping → response → live result flow happening instantly.
-
----
+## LIVE PROJECT 
+PROJECT LINK :- https://citymesh.onrender.com/
 
 ## 🎬 Demo Script (for your mentor)
 
