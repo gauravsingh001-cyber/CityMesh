@@ -1,0 +1,173 @@
+[
+  {
+    "id": "osm_3412506800",
+    "name": "Big Bazaar",
+    "category": "Grocery",
+    "phone": "",
+    "distanceKm": 1,
+    "successScore": 0,
+    "lat": 22.059647,
+    "lng": 88.0752781
+  },
+  {
+    "id": "osm_3412514004",
+    "name": "Max",
+    "category": "Clothes",
+    "phone": "",
+    "distanceKm": 0.9,
+    "successScore": 0,
+    "lat": 22.0594506,
+    "lng": 88.0751762
+  },
+  {
+    "id": "osm_3412515652",
+    "name": "Khadims",
+    "category": "Shoes",
+    "phone": "",
+    "distanceKm": 0.9,
+    "successScore": 0,
+    "lat": 22.0595873,
+    "lng": 88.0751332
+  },
+  {
+    "id": "osm_3419034093",
+    "name": "Mobility World",
+    "category": "Electronics",
+    "phone": "",
+    "distanceKm": 1,
+    "successScore": 0,
+    "lat": 22.0596315,
+    "lng": 88.0754302
+  },
+  {
+    "id": "osm_3419034094",
+    "name": "John Players",
+    "category": "Clothes",
+    "phone": "",
+    "distanceKm": 0.9,
+    "successScore": 0,
+    "lat": 22.0593686,
+    "lng": 88.0754713
+  },
+  {
+    "id": "osm_3419047298",
+    "name": "Himalaya",
+    "category": "Optician",
+    "phone": "",
+    "distanceKm": 0.9,
+    "successScore": 0,
+    "lat": 22.0593208,
+    "lng": 88.0754033
+  },
+  {
+    "id": "osm_3419051810",
+    "name": "Jockey",
+    "category": "Clothes",
+    "phone": "",
+    "distanceKm": 0.9,
+    "successScore": 0,
+    "lat": 22.0592512,
+    "lng": 88.0752129
+  },
+  {
+    "id": "osm_3426362847",
+    "name": "Pantaloons",
+    "category": "Clothes",
+    "phone": "",
+    "distanceKm": 0.9,
+    "successScore": 0,
+    "lat": 22.0593803,
+    "lng": 88.075179
+  },
+  {
+    "id": "osm_3465921017",
+    "name": "Titan Eye Plus",
+    "category": "Optician",
+    "phone": "",
+    "distanceKm": 1,
+    "successScore": 0,
+    "lat": 22.0595933,
+    "lng": 88.0754328
+  },
+  {
+    "id": "osm_3708815141",
+    "name": "Pepe Jeans",
+    "category": "Clothes",
+    "phone": "",
+    "distanceKm": 0.9,
+    "successScore": 0,
+    "lat": 22.0592079,
+    "lng": 88.0756156
+  },
+  {
+    "id": "osm_3708816821",
+    "name": "Mufti",
+    "category": "Clothes",
+    "phone": "",
+    "distanceKm": 0.9,
+    "successScore": 0,
+    "lat": 22.0592047,
+    "lng": 88.0755099
+  },
+  {
+    "id": "osm_3708816822",
+    "name": "Moustache",
+    "category": "Clothes",
+    "phone": "",
+    "distanceKm": 0.9,
+    "successScore": 0,
+    "lat": 22.0591855,
+    "lng": 88.0754306
+  },
+  {
+    "id": "osm_3708816851",
+    "name": "Ghost House",
+    "category": "General",
+    "phone": "9674158655",
+    "distanceKm": 0.9,
+    "successScore": 0,
+    "lat": 22.0584442,
+    "lng": 88.0754174
+  },
+  {
+    "id": "osm_3722416668",
+    "name": "Spykar",
+    "category": "Clothes",
+    "phone": "",
+    "distanceKm": 0.9,
+    "successScore": 0,
+    "lat": 22.0592895,
+    "lng": 88.0754896
+  },
+  {
+    "id": "osm_3722439493",
+    "name": "DTDC",
+    "category": "General",
+    "phone": "",
+    "distanceKm": 0.9,
+    "successScore": 0,
+    "lat": 22.0598451,
+    "lng": 88.074273
+  },
+  {
+    "id": "osm_334161050",
+    "name": "City Center Mall Haldia",
+    "category": "Mall",
+    "phone": "",
+    "distanceKm": 0.9,
+    "successScore": 0,
+    "lat": 22.0589484,
+    "lng": 88.0754377
+  },
+  {
+    "id": "shop_1789760951467",
+    "name": "Gaurav Singh",
+    "category": "Clothes",
+    "phone": "",
+    "lat": 22.052098983521265,
+    "lng": 88.07070120008083,
+    "distanceKm": 0,
+    "successScore": 1,
+    "status": "online"
+  }
+]

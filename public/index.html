@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CityMesh — Discover best nearby shops. CityMesh it!</title>
+<link rel="stylesheet" href="style.css" />
+<style>
+  body {
+    background-color: var(--primary);
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+  }
+  
+  /* Floating Background Animation */
+  .floating-bg {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    overflow: hidden;
+    z-index: 0;
+    pointer-events: none;
+  }
+  
+  .float-icon {
+    position: absolute;
+    font-size: 60px; /* Increased size */
+    opacity: 0.4; /* Increased intensity */
+    animation: floatUp linear infinite;
+    bottom: -100px;
+    filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.1));
+  }
+
+  @keyframes floatUp {
+    0% { transform: translateY(0) rotate(0deg); }
+    100% { transform: translateY(-120vh) rotate(360deg); }
+  }
+
+  /* Make sure content is above background */
+  .landing-header, .hero-section, .footer-wave {
+    position: relative;
+    z-index: 10;
+  }
+
+  .landing-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 40px;
+  }
+  
+  .landing-header .logo {
+    font-size: 32px;
+    font-weight: 800;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+  }
+  
+  .landing-header .login-btn {
+    background: transparent;
+    color: white;
+    padding: 10px 28px;
+    border: 2px solid white;
+    border-radius: 50px;
+    font-weight: 700;
+    text-decoration: none;
+    font-size: 15px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+  
+  .landing-header .login-btn:hover {
+    background: white;
+    color: var(--primary);
+    transform: scale(1.05);
+  }
+
+  .hero-section {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: white;
+    padding: 20px;
+  }
+
+  .hero-section h1 {
+    font-size: 52px;
+    font-weight: 800;
+    margin: 0 0 40px 0;
+    line-height: 1.2;
+    max-width: 800px;
+  }
+
+  .role-cards-container {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .role-card {
+    background: white;
+    border-radius: 24px;
+    padding: 40px;
+    width: 340px;
+    text-align: center;
+    color: var(--text);
+    text-decoration: none;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+  }
+
+  .role-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.2);
+  }
+
+  .role-icon {
+    font-size: 64px;
+    background: linear-gradient(135deg, #f4f5f7, #e9e9eb);
+    width: 120px;
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+  }
+
+  .role-title {
+    font-size: 24px;
+    font-weight: 800;
+    margin: 0;
+  }
+
+  .role-desc {
+    font-size: 15px;
+    color: var(--muted);
+    margin: 0;
+    line-height: 1.5;
+  }
+  
+  .role-card .btn-primary {
+    width: 100%; 
+    border-radius: 12px; 
+    margin-top: 10px;
+    padding: 16px; 
+    font-size: 16px;
+  }
+
+  .footer-wave {
+    background: white;
+    padding: 30px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 500;
+    margin-top: 60px;
+    border-top-left-radius: 40px;
+    border-top-right-radius: 40px;
+  }
+  
+  /* Auth Modal Styles */
+  .auth-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .auth-modal {
+    background: white;
+    width: 100%;
+    max-width: 400px;
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+    position: relative;
+  }
+  
+  .auth-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    cursor: pointer;
+    font-size: 24px;
+    color: #999;
+    z-index: 10;
+    transition: color 0.2s;
+  }
+  
+  .auth-close:hover {
+    color: #333;
+  }
+  
+  .auth-tabs {
+    display: flex;
+    margin-top: 10px;
+    margin-bottom: 24px;
+    border-bottom: 2px solid var(--border);
+  }
+  
+  .auth-tab {
+    flex: 1;
+    text-align: center;
+    padding: 12px;
+    font-weight: 700;
+    color: var(--muted);
+    cursor: pointer;
+  }
+  
+  .auth-tab.active {
+    color: var(--primary);
+    border-bottom: 3px solid var(--primary);
+    margin-bottom: -2px;
+  }
+  
+  .auth-form input {
+    width: 100%;
+    padding: 14px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 16px;
+    font-family: inherit;
+    font-size: 15px;
+    box-sizing: border-box;
+  }
+  
+  .auth-form button {
+    width: 100%;
+    padding: 14px;
+    font-size: 16px;
+  }
+</style>
+</head>
+<body>
+
+<!-- Animated Floating Emojis -->
+<div class="floating-bg">
+  <div class="float-icon" style="left: 5%; animation-duration: 15s; animation-delay: -5s;">🛍️</div>
+  <div class="float-icon" style="left: 15%; animation-duration: 22s; animation-delay: -12s;">🍎</div>
+  <div class="float-icon" style="left: 25%; animation-duration: 18s; animation-delay: -8s;">💊</div>
+  <div class="float-icon" style="left: 35%; animation-duration: 25s; animation-delay: -18s;">👕</div>
+  <div class="float-icon" style="left: 45%; animation-duration: 19s; animation-delay: -3s;">🔧</div>
+  <div class="float-icon" style="left: 55%; animation-duration: 21s; animation-delay: -10s;">🍔</div>
+  <div class="float-icon" style="left: 65%; animation-duration: 16s; animation-delay: -14s;">🛒</div>
+  <div class="float-icon" style="left: 75%; animation-duration: 24s; animation-delay: -2s;">📦</div>
+  <div class="float-icon" style="left: 85%; animation-duration: 17s; animation-delay: -9s;">🍕</div>
+  <div class="float-icon" style="left: 95%; animation-duration: 20s; animation-delay: -6s;">💉</div>
+  <div class="float-icon" style="left: 10%; animation-duration: 26s; animation-delay: -22s;">📱</div>
+  <div class="float-icon" style="left: 80%; animation-duration: 23s; animation-delay: -15s;">👟</div>
+</div>
+
+<div class="landing-header">
+  <a href="/" class="logo"><span style="font-size: 36px;">🥡</span> CityMesh</a>
+  <button class="login-btn" onclick="openAuthModal('user.html')">Sign in</button>
+</div>
+
+<div class="hero-section">
+  <h1>Order groceries & medicines. Discover best nearby shops. CityMesh it!</h1>
+  
+  <div class="role-cards-container">
+    <div class="role-card" onclick="openAuthModal('user.html')">
+      <div class="role-icon">🛍️</div>
+      <div>
+        <h2 class="role-title">CUSTOMER</h2>
+        <p class="role-desc">Login to discover local shops, send requests, and buy instantly.</p>
+      </div>
+      <div class="btn-primary">Login as User &rarr;</div>
+    </div>
+    
+    <div class="role-card" onclick="window.location.href='shopkeeper.html'">
+      <div class="role-icon">🏪</div>
+      <div>
+        <h2 class="role-title">SHOPKEEPER</h2>
+        <p class="role-desc">Register your shop, receive live orders, and grow your business.</p>
+      </div>
+      <div class="btn-primary" style="background: #282c3f;">Login as Partner &rarr;</div>
+    </div>
+  </div>
+</div>
+
+<div class="footer-wave">
+  CityMesh Prototype · Hyper-Local Live Commerce Mesh · Built for the Gemini Event
+</div>
+
+<!-- Auth Modal -->
+<div class="auth-overlay" id="authOverlay">
+  <div class="auth-modal">
+    <div class="auth-close" onclick="closeAuthModal()">✖</div>
+    
+    <!-- Main Auth Form -->
+    <div id="authFormMain">
+      <div class="auth-tabs">
+        <div class="auth-tab active" id="tabLogin" onclick="switchAuthTab('login')">Login</div>
+        <div class="auth-tab" id="tabSignup" onclick="switchAuthTab('signup')">Sign Up</div>
+      </div>
+      
+      <div class="auth-form">
+        <input type="email" id="authEmail" placeholder="Email Address" required />
+        <input type="password" id="authPassword" placeholder="Password" required />
+        
+        <div id="signupLocationDiv" style="display:none; margin-bottom:16px; align-items:center; gap:10px;">
+          <button class="btn-secondary" id="fetchUserLocBtn" onclick="fetchUserLocation()" style="padding:10px; font-size:13px; flex-grow:1; background:white; color:black; border:1px solid #ccc;">📍 Fetch My Home Location</button>
+          <span id="userLocStatus" style="font-size:13px; color:var(--muted); white-space:nowrap;">Not set</span>
+        </div>
+
+        <div id="authError" style="color:var(--red); font-size:13px; margin-bottom:10px; display:none;">Error message</div>
+        <button class="btn-primary" id="authSubmitBtn" onclick="submitAuth()">Continue</button>
+
+        <div style="margin: 20px 0; text-align: center; color: var(--muted); font-size: 14px;">OR</div>
+        
+        <button class="btn-secondary" onclick="window.location.href='/api/auth/google'" style="width: 100%; padding: 14px; background: white; border: 1px solid #ccc; border-radius: 10px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; color: #333; font-weight: 600;">
+          <img src="https://www.svgrepo.com/show/475656/google-color.svg" width="20" height="20" alt="Google"> Continue with Google
+        </button>
+      </div>
+    </div>
+
+    <!-- OTP Verification Form -->
+    <div class="auth-form" id="authFormVerify" style="display:none;">
+      <h3 style="margin-top:0; color: #282c3f;">Verify your email</h3>
+      <p style="font-size: 14px; color: var(--muted); margin-bottom: 16px;">We sent an OTP to <b id="verifyEmailText"></b></p>
+      
+      <input type="text" id="authOtp" placeholder="Enter 6-digit OTP" required style="letter-spacing: 4px; font-size: 20px; text-align: center; font-weight: 700; background: #f4f5f7;" />
+      
+      <div id="verifyError" style="color:var(--red); font-size:13px; margin-bottom:10px; display:none;">Error message</div>
+      <button class="btn-primary" id="verifySubmitBtn" onclick="submitVerify()">Verify & Continue</button>
+      
+      <div style="margin-top: 16px; text-align: center;">
+        <button onclick="backToLogin()" style="background:none; border:none; color:var(--muted); cursor:pointer; font-size: 13px; text-decoration:underline;">&larr; Back to login</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let authMode = 'login'; // 'login' or 'signup'
+  let targetRedirect = 'user.html';
+  let authLat = null;
+  let authLng = null;
+  let pendingEmail = "";
+
+  // Handle Google Auth success redirect
+  window.onload = () => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('googleAuthSuccess') === 'true') {
+      const email = params.get('email');
+      localStorage.setItem("userEmail", email);
+      window.location.href = 'user.html'; // default target
+    }
+  };
+  
+  function openAuthModal(target) {
+    targetRedirect = target;
+    document.getElementById('authOverlay').style.display = 'flex';
+    document.getElementById('authError').style.display = 'none';
+    backToLogin();
+  }
+  
+  function closeAuthModal() {
+    document.getElementById('authOverlay').style.display = 'none';
+  }
+  
+  function switchAuthTab(mode) {
+    authMode = mode;
+    document.getElementById('authError').style.display = 'none';
+    
+    if(mode === 'login') {
+      document.getElementById('tabLogin').classList.add('active');
+      document.getElementById('tabSignup').classList.remove('active');
+      document.getElementById('signupLocationDiv').style.display = 'none';
+    } else {
+      document.getElementById('tabSignup').classList.add('active');
+      document.getElementById('tabLogin').classList.remove('active');
+      document.getElementById('signupLocationDiv').style.display = 'flex';
+    }
+  }
+
+  function backToLogin() {
+    document.getElementById('authFormMain').style.display = 'block';
+    document.getElementById('authFormVerify').style.display = 'none';
+    document.getElementById('authError').style.display = 'none';
+    document.getElementById('verifyError').style.display = 'none';
+  }
+
+  function showVerifyForm(email) {
+    pendingEmail = email;
+    document.getElementById('verifyEmailText').textContent = email;
+    document.getElementById('authFormMain').style.display = 'none';
+    document.getElementById('authFormVerify').style.display = 'block';
+  }
+
+  function fetchUserLocation() {
+    const btn = document.getElementById("fetchUserLocBtn");
+    const status = document.getElementById("userLocStatus");
+    
+    btn.textContent = "📍 Locating...";
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          authLat = position.coords.latitude;
+          authLng = position.coords.longitude;
+          status.textContent = "✅ Found";
+          status.style.color = "var(--green)";
+          btn.textContent = "📍 Location Acquired";
+        },
+        (err) => {
+          alert("Please allow location access to sign up.");
+          btn.textContent = "📍 Fetch My Home Location";
+        }
+      );
+    } else {
+      alert("Geolocation is not supported by your browser.");
+    }
+  }
+  
+  async function submitAuth() {
+    const email = document.getElementById('authEmail').value.trim();
+    const password = document.getElementById('authPassword').value.trim();
+    const errorEl = document.getElementById('authError');
+    const btn = document.getElementById('authSubmitBtn');
+    
+    if(!email || !password) {
+      errorEl.textContent = "Please fill in all fields.";
+      errorEl.style.display = "block";
+      return;
+    }
+    
+    if (authMode === 'signup' && (authLat === null || authLng === null)) {
+      errorEl.textContent = "Please fetch your home location to sign up.";
+      errorEl.style.display = "block";
+      return;
+    }
+    
+    btn.disabled = true;
+    btn.textContent = "Please wait...";
+    
+    const endpoint = authMode === 'signup' ? '/api/auth/signup' : '/api/auth/login';
+    
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, lat: authLat, lng: authLng })
+      });
+      
+      const data = await res.json();
+      
+      if(!res.ok) {
+        if (data.requireVerification) {
+           showVerifyForm(data.email);
+           return;
+        }
+        throw new Error(data.error || "Authentication failed");
+      }
+      
+      if (data.requireVerification) {
+        showVerifyForm(data.email);
+      } else {
+        localStorage.setItem("userEmail", data.user.email);
+        window.location.href = targetRedirect;
+      }
+      
+    } catch(err) {
+      errorEl.textContent = err.message;
+      errorEl.style.display = "block";
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = "Continue";
+      }
+    }
+  }
+
+  async function submitVerify() {
+    const otp = document.getElementById('authOtp').value.trim();
+    const errorEl = document.getElementById('verifyError');
+    const btn = document.getElementById('verifySubmitBtn');
+
+    if (!otp) {
+      errorEl.textContent = "Please enter the OTP.";
+      errorEl.style.display = "block";
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "Verifying...";
+
+    try {
+      const res = await fetch('/api/auth/verify', {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: pendingEmail, otp })
+      });
+      
+      const data = await res.json();
+      
+      if(!res.ok) {
+        throw new Error(data.error || "Verification failed");
+      }
+      
+      // Success
+      localStorage.setItem("userEmail", data.user.email);
+      window.location.href = targetRedirect;
+
+    } catch(err) {
+      errorEl.textContent = err.message;
+      errorEl.style.display = "block";
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Verify & Continue";
+    }
+  }
+</script>
+
+</body>
+</html>

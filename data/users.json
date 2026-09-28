@@ -1,0 +1,17 @@
+[
+  {
+    "id": "user_1789760864361",
+    "email": "gauravsi@gmail.com",
+    "password": "asdfghjkl",
+    "lat": 22.052082844664806,
+    "lng": 88.07072300216531
+  },
+  {
+    "id": "shopkeeper_1789760951466",
+    "email": "gauravii@gmail.com",
+    "password": "asdfghjkl",
+    "lat": 22.052098983521265,
+    "lng": 88.07070120008083,
+    "isShopkeeper": true
+  }
+]

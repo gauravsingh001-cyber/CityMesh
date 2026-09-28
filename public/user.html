@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CityMesh — Find it nearby, instantly</title>
+<link rel="stylesheet" href="style.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+</head>
+<body>
+
+<div class="topbar">
+  <h1><a href="index.html" style="text-decoration:none; color:inherit; display:flex; align-items:center; gap:8px;"><span style="font-size:28px;">🥡</span> CityMesh</a></h1>
+  <div style="display:flex; align-items:center; gap:15px;">
+    <span class="tag">📍 Haldia, WB</span>
+    <span id="userEmailDisplay" style="font-size:13px; font-weight:600; color:var(--primary);"></span>
+    <a class="nav-link" href="#" onclick="showHistory()" style="font-size:14px; font-weight:600; cursor:pointer;">My History</a>
+    <a class="nav-link" href="index.html" onclick="localStorage.removeItem('userEmail')">Logout</a>
+  </div>
+</div>
+<script>
+  const email = localStorage.getItem('userEmail');
+  if(email) document.getElementById('userEmailDisplay').textContent = "👋 " + email.split('@')[0];
+</script>
+
+<div class="container">
+  
+  <div class="categories-wrapper" id="categoriesWrapper">
+    <h2>What's on your mind?</h2>
+    <div class="categories-scroll" id="categoriesScroll">
+      <!-- Categories will be injected here via JS -->
+    </div>
+  </div>
+
+  <div class="hero-banner" style="display:flex; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); border-radius: 24px; overflow: hidden; margin-bottom: 32px; color: white; box-shadow: 0 12px 32px rgba(255, 90, 95, 0.3); position: relative;">
+    
+    <!-- Decorative background elements -->
+    <div style="position: absolute; right: 20%; top: -20%; width: 300px; height: 300px; background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%); border-radius: 50%;"></div>
+    <div style="position: absolute; right: 0; bottom: -20%; width: 400px; height: 400px; background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%); border-radius: 50%;"></div>
+
+    <div style="flex: 1.2; padding: 48px; display: flex; flex-direction: column; justify-content: center; position: relative; z-index: 2;">
+      <div style="display: inline-flex; background: rgba(255,255,255,0.2); padding: 6px 16px; border-radius: 20px; font-size: 13px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.3); width: fit-content; align-items: center; gap: 8px;">
+        <span style="font-size: 14px;">🛍️</span> Click & Collect
+      </div>
+      <h2 style="font-size: 38px; margin: 0 0 16px 0; font-weight: 800; line-height: 1.15; letter-spacing: -1px;">Confirm from home.<br>Pick up instantly.</h2>
+      <p style="color: rgba(255,255,255,0.9); font-size: 16px; margin-bottom: 28px; max-width: 420px; line-height: 1.6;">Check item availability with nearby shops, book your order online, and just grab it from the store — zero waiting time.</p>
+      <div>
+        <button style="background: white; color: var(--primary); border: none; padding: 14px 32px; border-radius: 12px; font-weight: 800; font-size: 16px; cursor: pointer; box-shadow: 0 8px 16px rgba(0,0,0,0.15); transition: transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);">Explore Shops</button>
+      </div>
+    </div>
+    
+    <div style="flex: 1; position: relative;">
+      <!-- Two background layers for a true smooth crossfade -->
+      <div id="heroBannerBg1" style="position: absolute; top:0; left:0; width:100%; height:100%; background-size: cover; background-position: center; transition: opacity 1.2s ease-in-out; opacity: 1;"></div>
+      <div id="heroBannerBg2" style="position: absolute; top:0; left:0; width:100%; height:100%; background-size: cover; background-position: center; transition: opacity 1.2s ease-in-out; opacity: 0;"></div>
+      
+      <!-- Gradient overlay to blend the image perfectly -->
+      <div style="position: absolute; top:0; left:0; width:100%; height:100%; background: linear-gradient(to right, var(--primary-dark) 0%, transparent 60%); pointer-events: none; z-index: 1;"></div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      // Images matching different categories (General, Grocery, Clothes, Hardware, Medical)
+      const heroImages = [
+        'https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&q=80&w=800',
+        'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=800',
+        'https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?auto=format&fit=crop&q=80&w=800',
+        'https://images.unsplash.com/photo-1530124566582-a618bc2615dc?auto=format&fit=crop&q=80&w=800',
+        'https://images.unsplash.com/photo-1585435557343-3b092031a831?auto=format&fit=crop&q=80&w=800'
+      ];
+      let heroIndex = 0;
+      let activeBg = 1;
+      const bg1 = document.getElementById('heroBannerBg1');
+      const bg2 = document.getElementById('heroBannerBg2');
+      
+      if (bg1 && bg2) {
+        // Set initial image
+        bg1.style.backgroundImage = `url('${heroImages[0]}')`;
+        
+        // Cycle images every 5.5 seconds for a much more relaxed pace
+        setInterval(() => {
+          heroIndex = (heroIndex + 1) % heroImages.length;
+          const nextImg = `url('${heroImages[heroIndex]}')`;
+          
+          // True Crossfade Logic
+          if (activeBg === 1) {
+            bg2.style.backgroundImage = nextImg;
+            bg2.style.opacity = '1';
+            bg1.style.opacity = '0';
+            activeBg = 2;
+          } else {
+            bg1.style.backgroundImage = nextImg;
+            bg1.style.opacity = '1';
+            bg2.style.opacity = '0';
+            activeBg = 1;
+          }
+        }, 5500); 
+      }
+    })();
+  </script>
+
+  <div class="card" id="shopsCard">
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom:16px;">
+      <h2 style="margin:0;">Step 1 — Nearby Shops</h2>
+      <input type="text" id="shopSearchInput" placeholder="🔍 Search for a shop or item..." style="flex:1; min-width:200px; max-width:400px; padding:12px 16px; border-radius:12px; font-size:14px;" />
+    </div>
+    <div id="shopsContainer">Loading shops...</div>
+  </div>
+
+  <div class="card" id="requestCard" style="display:none;">
+    <h2>Step 2 — What do you need?</h2>
+    <button class="btn-secondary" onclick="closeHistory()" style="float:right; padding: 4px 8px; font-size: 0.9em; margin-bottom: 10px;">← Back to Shops</button>
+    <div style="clear:both;"></div>
+    <p class="muted">Type items in any order. We'll send it directly to <strong id="selectedShopName"></strong>.</p>
+    
+    <!-- Map UI Container -->
+    <div id="shopMapContainer" style="display:none; margin-bottom: 20px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+       <div id="shopMap" style="height: 200px; width: 100%;"></div>
+       <button id="showRouteBtn" class="btn-secondary" style="width: 100%; border-radius: 0; border: none; padding: 12px; font-weight: 600; border-top: 1px solid var(--border); background: #f8f9fa;">📍 Show Route from My Location</button>
+    </div>
+    
+    <div id="recommendationsBox" style="display:none; background: rgba(0,166,153,0.08); padding: 16px; border-radius: 12px; margin-bottom: 16px; font-size: 14px; border: 1px solid rgba(0,166,153,0.2);">
+      <strong style="color:var(--green); display:block; margin-bottom:8px;">💡 Smart Suggestion</strong> 
+      <span id="recommendationText" style="color:var(--text); display:block; margin-bottom:12px;"></span>
+      <button class="btn-primary" id="recSwitchBtn" style="padding: 8px 16px; font-size: 13px; border-radius: 8px; width: 100%;">Request from them instead</button>
+    </div>
+
+    <textarea id="shoppingList" rows="3" placeholder="e.g. Amul Milk, Bread, Eggs"></textarea>
+    <br /><br />
+    <button class="btn-primary" id="parseBtn">🔍 Parse & Send Request</button>
+    <div id="parseSource" class="muted" style="margin-top:8px;"></div>
+  </div>
+
+  <div class="card" id="resultsCard" style="display:none;">
+    <h2>Step 3 — Live Shopkeeper Response</h2>
+    <button class="btn-secondary" id="backToShopsBtn" style="float:right; padding: 4px 8px; font-size: 0.9em; margin-bottom: 10px;">← Back to Shops</button>
+    <div style="clear:both;"></div>
+    <div id="resultsContainer"></div>
+  </div>
+
+  <div class="card" id="historyCard" style="display:none;">
+    <h2>My Request History</h2>
+    <button class="btn-secondary" onclick="closeHistory()" style="float:right; padding: 4px 8px; font-size: 0.9em; margin-bottom: 10px;">← Back to Shops</button>
+    <div style="clear:both;"></div>
+    <div id="historyContainer">Loading history...</div>
+  </div>
+
+  <div class="footer-note">CityMesh Prototype · Hyper-Local Live Commerce Mesh · Built for the Gemini Event</div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

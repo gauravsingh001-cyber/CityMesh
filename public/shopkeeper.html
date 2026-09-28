@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CityMesh — Shopkeeper Dashboard</title>
+<link rel="stylesheet" href="style.css" />
+<style>
+  body {
+    background-color: #f0f2f5;
+    background-image: url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Ctext x='30' y='50' font-size='24' opacity='0.1'%3E🏪%3C/text%3E%3Ctext x='90' y='100' font-size='20' opacity='0.1'%3E📦%3C/text%3E%3C/svg%3E");
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1><a href="index.html" style="text-decoration:none; color:inherit; display:flex; align-items:center; gap:8px;"><span style="font-size:28px;">🥡</span> CityMesh</a></h1>
+  <div style="display:flex; align-items:center; gap:15px;">
+    <span class="tag" style="background:#282c3f; color:white;">Shopkeeper View</span>
+    <span id="shopkeeperEmailDisplay" style="font-size:13px; font-weight:600; color:var(--primary);"></span>
+    <a class="nav-link" href="index.html" onclick="localStorage.removeItem('userEmail')">Logout</a>
+  </div>
+</div>
+<script>
+  const sEmail = localStorage.getItem('userEmail');
+  if(sEmail) document.getElementById('shopkeeperEmailDisplay').textContent = "👋 " + sEmail.split('@')[0];
+</script>
+
+<div class="container">
+
+  <div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h2 style="margin:0;">Select Your Shop</h2>
+      <div>
+        <button class="btn-secondary" onclick="openEditProfile()" style="padding:4px 8px; font-size:0.9em; margin-right: 8px;">✏️ Edit Profile</button>
+        <button class="btn-secondary" onclick="document.getElementById('registerCard').style.display='block'; document.getElementById('editCard').style.display='none';" style="padding:4px 8px; font-size:0.9em;">+ Add New Shop</button>
+      </div>
+    </div>
+    <select id="shopSelect" style="width:100%; padding:12px; border-radius:10px; border:1px solid #e2e5ea; font-size:15px; margin-top:10px;"></select>
+  </div>
+
+  <div class="card" id="editCard" style="display:none; background-color:#f8f9fa; border: 1px solid #e0e0e0;">
+    <h2>Edit Shop Profile</h2>
+    <input type="text" id="editShopUpi" placeholder="UPI ID for payments (e.g. shop@ybl)" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ccc; box-sizing:border-box;"/>
+    
+    <h4 style="margin: 10px 0 5px 0; color: var(--muted);">Shop Images (Optional, max 3 URLs)</h4>
+    <input type="url" id="editShopImg1" placeholder="Image URL 1" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ccc; box-sizing:border-box;"/>
+    <input type="url" id="editShopImg2" placeholder="Image URL 2" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ccc; box-sizing:border-box;"/>
+    <input type="url" id="editShopImg3" placeholder="Image URL 3" style="width:100%; padding:10px; margin-bottom:14px; border-radius:8px; border:1px solid #ccc; box-sizing:border-box;"/>
+
+    <button class="btn-primary" id="updateProfileBtn" onclick="updateShopProfile()">Update Profile</button>
+    <button class="btn-secondary" onclick="document.getElementById('editCard').style.display='none'">Cancel</button>
+  </div>
+
+  <div class="card" id="registerCard" style="display:none; background-color:#f8f9fa; border: 1px solid #e0e0e0;">
+    <h2>Register New Shop</h2>
+    <input type="text" id="regShopName" placeholder="Shop Name (e.g. Gupta Store)" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ccc; box-sizing:border-box;"/>
+    
+    <select id="regShopCategory" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ccc; box-sizing:border-box;">
+      <option value="">Select Category...</option>
+      <option value="Grocery">Grocery</option>
+      <option value="Medical">Medical</option>
+      <option value="Hardware">Hardware</option>
+      <option value="Stationery">Stationery</option>
+      <option value="Clothes">Clothes</option>
+      <option value="Shoes">Shoes</option>
+      <option value="Electronics">Electronics</option>
+      <option value="General">General</option>
+    </select>
+    
+    <input type="email" id="regShopEmail" placeholder="Email Address (For Login)" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ccc; box-sizing:border-box;"/>
+    <input type="password" id="regShopPassword" placeholder="Password (For Login)" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ccc; box-sizing:border-box;"/>
+
+    <input type="text" id="regShopPhone" placeholder="Phone Number (Optional)" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ccc; box-sizing:border-box;"/>
+    
+    <input type="text" id="regShopUpi" placeholder="UPI ID for payments (e.g. shop@ybl)" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ccc; box-sizing:border-box;"/>
+    
+    <h4 style="margin: 10px 0 5px 0; color: var(--muted);">Shop Images (Optional, max 3 URLs)</h4>
+    <input type="url" id="regShopImg1" placeholder="Image URL 1" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ccc; box-sizing:border-box;"/>
+    <input type="url" id="regShopImg2" placeholder="Image URL 2" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ccc; box-sizing:border-box;"/>
+    <input type="url" id="regShopImg3" placeholder="Image URL 3" style="width:100%; padding:10px; margin-bottom:14px; border-radius:8px; border:1px solid #ccc; box-sizing:border-box;"/>
+
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+      <button type="button" class="btn-secondary" id="fetchLocationBtn" style="padding:10px; font-size:13px; flex-grow:1;">📍 Fetch My Shop Location</button>
+      <span id="locationStatus" style="font-size:13px; color:var(--muted); white-space:nowrap; width:80px; text-align:center;">Not set</span>
+    </div>
+
+    <button class="btn-primary" id="registerBtn" disabled>Submit Registration</button>
+    <button class="btn-secondary" onclick="document.getElementById('registerCard').style.display='none'">Cancel</button>
+  </div>
+
+  <div class="card">
+    <h2>Incoming Pings (live)</h2>
+    <div id="pingsContainer">
+      <div class="empty-state">Select your shop above. New requests from nearby customers will appear here in real time.</div>
+    </div>
+  </div>
+
+  <div class="footer-note">CityMesh Prototype · Merchant Response Console</div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="shopkeeper.js"></script>
+</body>
+</html>
