@@ -43,6 +43,10 @@ shopSelect.addEventListener("change", () => {
   localStorage.setItem("currentShopId", currentShopId);
   socket.emit("join_shop", currentShopId);
   loadPings();
+  const editCard = document.getElementById('editCard');
+  if (editCard && editCard.style.display === 'block') {
+    openEditProfile();
+  }
 });
 
 async function loadPings() {
@@ -303,40 +307,141 @@ registerBtn?.addEventListener("click", async () => {
   }
 });
 
+let editShopLat = null;
+let editShopLng = null;
+const editFetchLocationBtn = document.getElementById("editFetchLocationBtn");
+const editLocationStatus = document.getElementById("editLocationStatus");
+
+editFetchLocationBtn?.addEventListener("click", () => {
+  if (editFetchLocationBtn) editFetchLocationBtn.textContent = "📍 Locating...";
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        editShopLat = position.coords.latitude;
+        editShopLng = position.coords.longitude;
+        if (editLocationStatus) {
+          editLocationStatus.textContent = "✅ Updated";
+          editLocationStatus.style.color = "var(--green)";
+        }
+        if (editFetchLocationBtn) editFetchLocationBtn.textContent = "📍 Location Acquired";
+      },
+      (err) => {
+        console.warn("Geolocation blocked or failed:", err);
+        alert("Please allow location access to update your shop location.");
+        if (editFetchLocationBtn) editFetchLocationBtn.textContent = "📍 Update Shop Location";
+      },
+      { timeout: 10000 }
+    );
+  } else {
+    alert("Geolocation is not supported by your browser.");
+    if (editFetchLocationBtn) editFetchLocationBtn.textContent = "📍 Update Shop Location";
+  }
+});
+
 function openEditProfile() {
   if (!currentShopId) return alert("Please select a shop first.");
   const shop = myShops.find(s => s.id === currentShopId);
   if (!shop) return alert("Shop not found.");
   
-  document.getElementById('editShopUpi').value = shop.upiId || "";
-  document.getElementById('editShopImg1').value = (shop.images && shop.images[0]) || "";
-  document.getElementById('editShopImg2').value = (shop.images && shop.images[1]) || "";
-  document.getElementById('editShopImg3').value = (shop.images && shop.images[2]) || "";
+  const nameEl = document.getElementById('editShopName');
+  if (nameEl) nameEl.value = shop.name || "";
+
+  const catSelect = document.getElementById('editShopCategory');
+  if (catSelect) {
+    let matched = false;
+    for (let i = 0; i < catSelect.options.length; i++) {
+      if (catSelect.options[i].value.toLowerCase() === (shop.category || "").toLowerCase()) {
+        catSelect.selectedIndex = i;
+        matched = true;
+        break;
+      }
+    }
+    if (!matched && shop.category) {
+      const opt = document.createElement("option");
+      opt.value = shop.category;
+      opt.textContent = shop.category;
+      catSelect.appendChild(opt);
+      catSelect.value = shop.category;
+    }
+  }
+
+  const phoneEl = document.getElementById('editShopPhone');
+  if (phoneEl) phoneEl.value = shop.phone || "";
+
+  const upiEl = document.getElementById('editShopUpi');
+  if (upiEl) upiEl.value = shop.upiId || "";
+
+  const img1 = document.getElementById('editShopImg1');
+  const img2 = document.getElementById('editShopImg2');
+  const img3 = document.getElementById('editShopImg3');
+  if (img1) img1.value = (shop.images && shop.images[0]) || "";
+  if (img2) img2.value = (shop.images && shop.images[1]) || "";
+  if (img3) img3.value = (shop.images && shop.images[2]) || "";
+
+  editShopLat = null;
+  editShopLng = null;
+  if (editLocationStatus) {
+    if (shop.lat && shop.lng) {
+      editLocationStatus.textContent = "📍 Set";
+      editLocationStatus.style.color = "var(--green)";
+    } else {
+      editLocationStatus.textContent = "Not set";
+      editLocationStatus.style.color = "var(--muted)";
+    }
+  }
+  if (editFetchLocationBtn) {
+    editFetchLocationBtn.textContent = "📍 Update Shop Location";
+  }
+
   document.getElementById('editCard').style.display = 'block';
   document.getElementById('registerCard').style.display = 'none';
 }
 
 async function updateShopProfile() {
   if (!currentShopId) return;
-  const upiId = document.getElementById("editShopUpi").value.trim();
+  const name = document.getElementById("editShopName")?.value.trim();
+  const category = document.getElementById("editShopCategory")?.value;
+  const phone = document.getElementById("editShopPhone")?.value.trim() || "";
+  const upiId = document.getElementById("editShopUpi")?.value.trim();
   const images = [
-    document.getElementById("editShopImg1").value.trim(),
-    document.getElementById("editShopImg2").value.trim(),
-    document.getElementById("editShopImg3").value.trim()
-  ].filter(url => url !== "");
+    document.getElementById("editShopImg1")?.value.trim(),
+    document.getElementById("editShopImg2")?.value.trim(),
+    document.getElementById("editShopImg3")?.value.trim()
+  ].filter(url => Boolean(url));
+
+  if (!name) return alert("Shop name is required.");
+  if (!category) return alert("Please select a category.");
+  if (!upiId) return alert("UPI ID is required.");
   
   const btn = document.getElementById("updateProfileBtn");
   btn.disabled = true;
   btn.textContent = "Updating...";
 
+  const payload = {
+    shopId: currentShopId,
+    name,
+    category,
+    phone,
+    upiId,
+    images
+  };
+
+  if (editShopLat !== null && editShopLng !== null) {
+    payload.lat = editShopLat;
+    payload.lng = editShopLng;
+  }
+
   try {
     const res = await fetch("/api/shops/update", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ shopId: currentShopId, upiId, images })
+      body: JSON.stringify(payload)
     });
 
-    if (!res.ok) throw new Error("Update failed");
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || "Update failed");
+    }
     
     alert("Profile updated successfully!");
     document.getElementById('editCard').style.display = 'none';

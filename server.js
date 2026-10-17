@@ -547,22 +547,29 @@ app.post("/api/shops/register", async (req, res) => {
 
 // 6.5 Shop Update Profile
 app.post("/api/shops/update", async (req, res) => {
-  const { shopId, upiId, images } = req.body;
+  const { shopId, name, category, phone, upiId, images, lat, lng } = req.body;
   if (!shopId) return res.status(400).json({ error: "Shop ID is required" });
 
   try {
     const shop = await Shop.findByPk(shopId);
     if (!shop) return res.status(404).json({ error: "Shop not found" });
 
-    shop.upiId = upiId || "";
+    if (name && name.trim()) shop.name = name.trim();
+    if (category && category.trim()) shop.category = category.trim();
+    if (phone !== undefined) shop.phone = phone ? phone.trim() : "";
+    if (upiId !== undefined) shop.upiId = upiId ? upiId.trim() : "";
     if (Array.isArray(images)) shop.images = images;
+    if (lat !== undefined && lng !== undefined && lat !== null && lng !== null) {
+      shop.lat = parseFloat(lat);
+      shop.lng = parseFloat(lng);
+    }
     await shop.save();
 
-    // Optionally notify connected clients about shop update if needed
-    // io.emit("shop_updated", shop);
+    io.emit("new_shop_added", shop);
 
     res.json({ ok: true, shop });
   } catch (err) {
+    console.error("Error updating shop:", err);
     res.status(500).json({ error: "Error updating shop" });
   }
 });

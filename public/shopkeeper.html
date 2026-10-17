@@ -42,12 +42,38 @@
 
   <div class="card" id="editCard" style="display:none; background-color:#f8f9fa; border: 1px solid #e0e0e0;">
     <h2>Edit Shop Profile</h2>
+
+    <label style="display:block; font-size:13px; font-weight:600; margin-bottom:4px; color:#444;">Shop Name</label>
+    <input type="text" id="editShopName" placeholder="Shop Name (e.g. Gupta Store)" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ccc; box-sizing:border-box;"/>
+    
+    <label style="display:block; font-size:13px; font-weight:600; margin-bottom:4px; color:#444;">Shop Category</label>
+    <select id="editShopCategory" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ccc; box-sizing:border-box;">
+      <option value="">Select Category...</option>
+      <option value="Grocery">Grocery</option>
+      <option value="Medical">Medical</option>
+      <option value="Hardware">Hardware</option>
+      <option value="Stationery">Stationery</option>
+      <option value="Clothes">Clothes</option>
+      <option value="Shoes">Shoes</option>
+      <option value="Electronics">Electronics</option>
+      <option value="General">General</option>
+    </select>
+
+    <label style="display:block; font-size:13px; font-weight:600; margin-bottom:4px; color:#444;">Phone Number (Optional)</label>
+    <input type="text" id="editShopPhone" placeholder="Phone Number (Optional)" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ccc; box-sizing:border-box;"/>
+
+    <label style="display:block; font-size:13px; font-weight:600; margin-bottom:4px; color:#444;">UPI ID for payments</label>
     <input type="text" id="editShopUpi" placeholder="UPI ID for payments (e.g. shop@ybl)" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ccc; box-sizing:border-box;"/>
     
     <h4 style="margin: 10px 0 5px 0; color: var(--muted);">Shop Images (Optional, max 3 URLs)</h4>
     <input type="url" id="editShopImg1" placeholder="Image URL 1" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ccc; box-sizing:border-box;"/>
     <input type="url" id="editShopImg2" placeholder="Image URL 2" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ccc; box-sizing:border-box;"/>
     <input type="url" id="editShopImg3" placeholder="Image URL 3" style="width:100%; padding:10px; margin-bottom:14px; border-radius:8px; border:1px solid #ccc; box-sizing:border-box;"/>
+
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+      <button type="button" class="btn-secondary" id="editFetchLocationBtn" style="padding:10px; font-size:13px; flex-grow:1;">📍 Update Shop Location</button>
+      <span id="editLocationStatus" style="font-size:13px; color:var(--muted); white-space:nowrap; width:80px; text-align:center;">Not set</span>
+    </div>
 
     <button class="btn-primary" id="updateProfileBtn" onclick="updateShopProfile()">Update Profile</button>
     <button class="btn-secondary" onclick="document.getElementById('editCard').style.display='none'">Cancel</button>
