@@ -20,7 +20,7 @@ Everything runs locally on your machine — no cloud deployment needed for the d
 ## 🧱 Tech Stack Used (in this prototype)
 
 | Layer | Technology |
-|---|---|
+
 | Backend | Node.js + Express |
 | Real-time | Socket.io (WebSockets) |
 | AI Parsing | Google Gemini API (`gemini-2.5-flash`) — **optional**, with automatic local fallback |

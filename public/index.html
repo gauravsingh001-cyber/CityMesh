@@ -399,11 +399,19 @@
     document.getElementById('verifyError').style.display = 'none';
   }
 
-  function showVerifyForm(email) {
+  function showVerifyForm(email, devOtp = null) {
     pendingEmail = email;
     document.getElementById('verifyEmailText').textContent = email;
     document.getElementById('authFormMain').style.display = 'none';
     document.getElementById('authFormVerify').style.display = 'block';
+    
+    if (devOtp) {
+      document.getElementById('authOtp').value = devOtp;
+      const verifyError = document.getElementById('verifyError');
+      verifyError.textContent = `⚡ Render Free hosting notice: SMTP port was blocked by host firewall. We've auto-filled your OTP: ${devOtp}`;
+      verifyError.style.color = "#0984e3";
+      verifyError.style.display = 'block';
+    }
   }
 
   function fetchUserLocation() {
@@ -453,32 +461,42 @@
     
     const endpoint = authMode === 'signup' ? '/api/auth/signup' : '/api/auth/login';
     
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 12000);
+
     try {
       const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, lat: authLat, lng: authLng })
+        body: JSON.stringify({ email, password, lat: authLat, lng: authLng }),
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
       
       const data = await res.json();
       
       if(!res.ok) {
         if (data.requireVerification) {
-           showVerifyForm(data.email);
+           showVerifyForm(data.email, data.devOtp);
            return;
         }
         throw new Error(data.error || "Authentication failed");
       }
       
       if (data.requireVerification) {
-        showVerifyForm(data.email);
+        showVerifyForm(data.email, data.devOtp);
       } else {
         localStorage.setItem("userEmail", data.user.email);
         window.location.href = targetRedirect;
       }
       
     } catch(err) {
-      errorEl.textContent = err.message;
+      clearTimeout(timeoutId);
+      if (err.name === 'AbortError') {
+        errorEl.textContent = "Request timed out. Please try again.";
+      } else {
+        errorEl.textContent = err.message;
+      }
       errorEl.style.display = "block";
     } finally {
       if (btn) {

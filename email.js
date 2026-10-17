@@ -5,12 +5,15 @@ const transporter = nodemailer.createTransport({
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS
-  }
+  },
+  connectionTimeout: 5000, // 5s connection timeout
+  greetingTimeout: 5000,
+  socketTimeout: 5000
 });
 
 const sendVerificationEmail = async (toEmail, otp) => {
   const mailOptions = {
-    from: `"CityMesh" <${process.env.SMTP_USER}>`,
+    from: `"CityMesh" <${process.env.SMTP_USER || 'no-reply@citymesh.com'}>`,
     to: toEmail,
     subject: 'CityMesh - Verify your Email Address',
     html: `
@@ -27,15 +30,20 @@ const sendVerificationEmail = async (toEmail, otp) => {
   try {
     // Only attempt to send if SMTP credentials are provided, else just log it
     if (process.env.SMTP_USER && process.env.SMTP_USER !== 'your_email@gmail.com') {
-      await transporter.sendMail(mailOptions);
+      const sendPromise = transporter.sendMail(mailOptions);
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("SMTP timeout (Render Free tier blocks outbound SMTP ports)")), 5000)
+      );
+      await Promise.race([sendPromise, timeoutPromise]);
       console.log(`Verification email sent to ${toEmail}`);
+      return { success: true };
     } else {
       console.log(`[Dev Mode] Verification OTP for ${toEmail}: ${otp}`);
+      return { success: true, devMode: true, otp };
     }
-    return true;
   } catch (error) {
-    console.error('Error sending email:', error);
-    return false;
+    console.error('Error sending email:', error.message || error);
+    return { success: false, error: error.message, otp };
   }
 };
 

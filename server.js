@@ -18,6 +18,7 @@ const { Op } = require("sequelize");
 const { sendVerificationEmail } = require("./email");
 
 const app = express();
+app.set("trust proxy", 1); // Trust Render reverse proxy for HTTPS and client IP
 const server = http.createServer(app);
 const io = new Server(server);
 
@@ -104,7 +105,8 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_ID !== "your_googl
   passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: "/api/auth/google/callback"
+    callbackURL: "/api/auth/google/callback",
+    proxy: true
   }, async (accessToken, refreshToken, profile, done) => {
     try {
       let user = await User.findOne({ where: { googleId: profile.id } });
@@ -404,8 +406,14 @@ app.post("/api/auth/signup", async (req, res) => {
         user.verificationToken = otp;
         user.password = await bcrypt.hash(password, 10);
         await user.save();
-        await sendVerificationEmail(user.email, otp);
-        return res.json({ success: true, message: "OTP resent. Please verify.", requireVerification: true, email: user.email });
+        const emailResult = await sendVerificationEmail(user.email, otp);
+        return res.json({ 
+          success: true, 
+          message: "OTP resent. Please verify.", 
+          requireVerification: true, 
+          email: user.email,
+          devOtp: (!emailResult.success || emailResult.devMode) ? otp : undefined
+        });
       }
       return res.status(400).json({ error: "User already exists" });
     }
@@ -423,8 +431,14 @@ app.post("/api/auth/signup", async (req, res) => {
       isVerified: false
     });
     
-    await sendVerificationEmail(user.email, otp);
-    res.json({ success: true, message: "Please verify your email", requireVerification: true, email: user.email });
+    const emailResult = await sendVerificationEmail(user.email, otp);
+    res.json({ 
+      success: true, 
+      message: "Please verify your email", 
+      requireVerification: true, 
+      email: user.email,
+      devOtp: (!emailResult.success || emailResult.devMode) ? otp : undefined
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error during signup" });
@@ -458,7 +472,12 @@ app.post("/api/auth/login", async (req, res) => {
   try {
     const user = await User.findOne({ where: { email } });
     if (!user) return res.status(401).json({ error: "Invalid email or password" });
-    if (!user.isVerified) return res.status(403).json({ error: "Please verify your email first", requireVerification: true, email: user.email });
+    if (!user.isVerified) return res.status(403).json({ 
+      error: "Please verify your email first", 
+      requireVerification: true, 
+      email: user.email,
+      devOtp: user.verificationToken 
+    });
     
     if (!user.password) return res.status(401).json({ error: "Please login with Google" });
 
