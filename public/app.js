@@ -399,7 +399,8 @@ backToShopsBtn.addEventListener("click", () => {
 
   shoppingListInput.value = "";
   parseSourceDiv.textContent = "";
-  
+
+  cleanupBillMaps();
   showSection("shops");
 });
 
@@ -603,6 +604,35 @@ function renderResults(data) {
                timeStr = d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
              }
 
+             const shopObj = allShops.find(shp => shp.id === s.shopId);
+             const sLat = s.lat != null ? s.lat : (shopObj && shopObj.lat != null ? shopObj.lat : null);
+             const sLng = s.lng != null ? s.lng : (shopObj && shopObj.lng != null ? shopObj.lng : null);
+
+             let locationMapUI = "";
+             if (sLat && sLng) {
+               locationMapUI = `
+                 <div style="margin-top: 16px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                   <div style="padding: 10px 14px; background: #f8f9fa; border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 600; color: var(--text); display: flex; align-items: center; justify-content: space-between;">
+                     <span>📍 Shop Pickup Location</span>
+                     <span style="font-size: 12px; color: var(--muted);">${s.shopName}</span>
+                   </div>
+                   <div id="billMap-${s.pingId}" style="height: 200px; width: 100%;"></div>
+                   <button id="billRouteBtn-${s.pingId}" class="btn-secondary" style="width: 100%; border-radius: 0; border: none; padding: 12px; font-weight: 600; border-top: 1px solid var(--border); background: #f8f9fa;" onclick="showBillRoute('${s.pingId}', ${sLat}, ${sLng})">📍 Show Route from My Location</button>
+                 </div>
+                 <div style="margin-top: 10px; text-align: center;">
+                   <a href="https://www.google.com/maps/dir/?api=1&destination=${sLat},${sLng}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #1a73e8; text-decoration: none; font-weight: 600; padding: 6px 14px; background: rgba(26,115,232,0.08); border-radius: 8px;">
+                     🗺️ Open in Google Maps ↗
+                   </a>
+                 </div>
+               `;
+             } else {
+               locationMapUI = `
+                 <div style="margin-top: 14px; padding: 10px 14px; background: #f8f9fa; border-radius: 8px; font-size: 13px; color: var(--muted); text-align: center; border: 1px solid var(--border);">
+                   📍 Merchant has not set precise map coordinates yet.
+                 </div>
+               `;
+             }
+
              extraUI = `
                <div style="margin-top: 20px; padding: 24px; background: white; border-radius: 16px; border: 2px dashed var(--green); text-align: left; box-shadow: 0 8px 24px rgba(0,166,153,0.12);">
                  <h3 style="margin: 0 0 16px 0; color: var(--green); font-size: 18px; text-align: center; letter-spacing: -0.5px;">🧾 DIGITAL BILL</h3>
@@ -613,6 +643,7 @@ function renderResults(data) {
                  <div style="font-size: 15px; margin-bottom: 8px; display: flex; justify-content: space-between;"><strong>Time:</strong> <span class="muted">${timeStr}</span></div>
                  <hr style="border-top: 1px dashed rgba(0,166,153,0.3); margin: 16px 0;" />
                  <div style="font-size: 14px; color: var(--muted); text-align: center;">Pick up from <strong style="color:var(--text);">${s.shopName}</strong></div>
+                 ${locationMapUI}
                </div>
              `;
           } else if (s.paymentStatus === 'sent') {
@@ -653,7 +684,130 @@ function renderResults(data) {
     })
     .join("");
 
+  cleanupBillMaps();
   resultsContainer.innerHTML = html || '<div class="empty-state">No items sent.</div>';
+  initBillMaps(itemsMap);
+}
+
+const billMaps = {};
+const billRoutingControls = {};
+
+function cleanupBillMaps() {
+  Object.keys(billMaps).forEach((id) => {
+    try {
+      if (billRoutingControls[id] && billMaps[id]) {
+        billMaps[id].removeControl(billRoutingControls[id]);
+      }
+      billMaps[id].remove();
+    } catch (e) {}
+    delete billMaps[id];
+    delete billRoutingControls[id];
+  });
+}
+
+function initBillMaps(itemsMap) {
+  setTimeout(() => {
+    Object.entries(itemsMap).forEach(([item, shops]) => {
+      const s = shops[0];
+      if (!s || s.paymentStatus !== 'confirmed') return;
+
+      const shopObj = allShops.find(shp => shp.id === s.shopId);
+      const sLat = s.lat != null ? s.lat : (shopObj && shopObj.lat != null ? shopObj.lat : null);
+      const sLng = s.lng != null ? s.lng : (shopObj && shopObj.lng != null ? shopObj.lng : null);
+
+      if (sLat && sLng) {
+        const mapEl = document.getElementById(`billMap-${s.pingId}`);
+        if (mapEl && !billMaps[s.pingId]) {
+          try {
+            const map = L.map(`billMap-${s.pingId}`).setView([sLat, sLng], 15);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+              attribution: '© OpenStreetMap'
+            }).addTo(map);
+
+            L.marker([sLat, sLng]).addTo(map)
+              .bindPopup(`<b>${s.shopName}</b>`).openPopup();
+
+            billMaps[s.pingId] = map;
+            setTimeout(() => { map.invalidateSize(); }, 200);
+          } catch (e) {
+            console.warn("Error initializing bill map:", e);
+          }
+        }
+      }
+    });
+  }, 100);
+}
+
+window.showBillRoute = (pingId, sLat, sLng) => {
+  const btn = document.getElementById(`billRouteBtn-${pingId}`);
+  if (!userLat || !userLng) {
+    if (navigator.geolocation) {
+      if (btn) btn.textContent = '📍 Getting your location...';
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          userLat = pos.coords.latitude;
+          userLng = pos.coords.longitude;
+          calculateBillRoute(pingId, sLat, sLng);
+        },
+        (err) => {
+          alert("Please allow location access to calculate the route.");
+          if (btn) btn.textContent = '📍 Show Route from My Location';
+        }
+      );
+      return;
+    } else {
+      alert("Please allow location access to calculate the route.");
+      return;
+    }
+  }
+  calculateBillRoute(pingId, sLat, sLng);
+};
+
+function calculateBillRoute(pingId, sLat, sLng) {
+  const btn = document.getElementById(`billRouteBtn-${pingId}`);
+  const map = billMaps[pingId];
+  if (!map) return;
+
+  if (btn) {
+    btn.textContent = 'Calculating Route...';
+    btn.disabled = true;
+  }
+
+  if (billRoutingControls[pingId]) {
+    try {
+      map.removeControl(billRoutingControls[pingId]);
+    } catch (e) {}
+    billRoutingControls[pingId] = null;
+  }
+
+  const routingCtrl = L.Routing.control({
+    waypoints: [
+      L.latLng(userLat, userLng),
+      L.latLng(sLat, sLng)
+    ],
+    routeWhileDragging: false,
+    show: false,
+    addWaypoints: false,
+    fitSelectedRoutes: true,
+    lineOptions: {
+      styles: [{ color: '#00a699', weight: 4 }]
+    }
+  }).addTo(map);
+
+  billRoutingControls[pingId] = routingCtrl;
+
+  routingCtrl.on('routesfound', function(e) {
+    const distance = e.routes[0].summary.totalDistance / 1000;
+    const time = Math.round(e.routes[0].summary.totalTime / 60);
+    if (btn) btn.textContent = `📍 ${distance.toFixed(1)} km away (~${time} mins)`;
+  });
+
+  routingCtrl.on('routingerror', function() {
+    if (btn) {
+      btn.textContent = '📍 Route not found. Open Google Maps below.';
+      btn.disabled = false;
+    }
+  });
 }
 
 window.agreeToPay = async (requestId, pingId) => {
